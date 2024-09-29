@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Kélian CHALIER",
@@ -11,5 +12,8 @@
   "dependencies": {
     "express": "^4.21.0",
     "express_test": "file:"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
   }
 }
