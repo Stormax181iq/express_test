@@ -22,3 +22,42 @@ exports.register = async (req, res, next) => {
     });
   }
 };
+
+exports.login = async (req, res, next) => {
+  const { username, password } = req.body;
+
+  // Check if username and password is provided
+  if (!username || !password) {
+    return res.status(400).json({
+      message: "Username or password missing",
+    });
+  }
+
+  try {
+    const dataResponse = (await User.find(username, password)).rows[0];
+
+    if (!dataResponse) {
+      res.status(401).json({
+        message: "Login not successful",
+        error: "User not found",
+      });
+    } else {
+      const userInfos = dataResponse.row.slice(1, -1).split(",");
+      const user = {
+        id: userInfos[0],
+        username: userInfos[1],
+        password: userInfos[2],
+        role: userInfos[3],
+      };
+      res.status(200).json({
+        message: "Login successful",
+        user,
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      message: "An error occurred",
+      error: err.message,
+    });
+  }
+};
