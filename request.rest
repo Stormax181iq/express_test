@@ -6,10 +6,10 @@ GET http://localhost:3000/users
 
 ###
 
-POST http://localhost:3000/users
+POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-  "name": "Noam",
-  "password": "passw"
+  "username": "test2",
+  "password": "123456"
 }

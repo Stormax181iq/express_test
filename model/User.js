@@ -1,6 +1,17 @@
-const { Pool } = require("pg");
-const pool = new Pool();
+const { connectDB, client } = require("../db");
 
-const schemaQuery = `
-  CREATE TABLE IF NOT EXISTS users
-`;
+connectDB();
+
+async function create(username, password) {
+  await client.query(
+    `INSERT INTO users (username, password) VALUES ('${username}', '${password}')`
+  );
+}
+
+function read() {}
+
+function update() {}
+
+function remove() {}
+
+module.exports = { create, read, update, remove };
