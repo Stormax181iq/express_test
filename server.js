@@ -13,5 +13,4 @@ process.on("unhandledRejection", (err) => {
   console.log(`An error occurred: ${err.message}`);
   server.close(() => process.exit(1));
 });
-// TODO stop at https://www.loginradius.com/blog/engineering/guest-post/nodejs-authentication-guide/#set-up-register-route
-// with errors
+// TODO stop at https://www.loginradius.com/blog/engineering/guest-post/nodejs-authentication-guide/#update-function

@@ -61,3 +61,52 @@ exports.login = async (req, res, next) => {
     });
   }
 };
+
+exports.update = async (req, res, next) => {
+  const { role, id } = req.body;
+
+  // Verifying if role and id is present
+  if (!role || !id) {
+    res.status(400).json({
+      message: "Role or Id not present",
+    });
+  }
+
+  // Verifying if the value of role is admin
+  if (role === "admin") {
+    await User.findById(id)
+      .then((dataResponse) => {
+        const userInfos = dataResponse.rows[0].row.slice(1, -1).split(",");
+        const user = {
+          id: userInfos[0],
+          username: userInfos[1],
+          password: userInfos[2],
+          role: userInfos[3],
+        };
+
+        // Verifies the user is not an admin
+        if (user.role === "admin") {
+          res.status(400).json({
+            message: "User is already an Admin",
+          });
+        }
+
+        user.role = role;
+        User.updateRole(id, user.role);
+        res.status(200).json({
+          message: "Update successful",
+          user,
+        });
+      })
+      .catch((err) => {
+        res.status(400).json({
+          message: "An error occurred",
+          error: err.message,
+        });
+      });
+  } else {
+    res.status(400).json({
+      message: "Role is not admin",
+    });
+  }
+};

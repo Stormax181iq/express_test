@@ -10,7 +10,13 @@ async function create(username, password) {
 
 function read() {}
 
-function update() {}
+async function updateRole(id, newRole) {
+  await client.query(
+    `UPDATE users
+      SET role = '${newRole}'
+      WHERE id = ${id}`
+  );
+}
 
 function remove() {}
 
@@ -21,4 +27,11 @@ async function find(username, password) {
   );
 }
 
-module.exports = { create, read, update, remove, find };
+async function findById(id) {
+  return await client.query(
+    `SELECT (id, username, password, role) FROM users
+      WHERE id=${id};`
+  );
+}
+
+module.exports = { create, read, updateRole, remove, find, findById };
