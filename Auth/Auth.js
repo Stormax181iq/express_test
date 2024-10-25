@@ -1,4 +1,5 @@
 const User = require("../model/User");
+const bcrypt = require("bcryptjs");
 
 exports.register = async (req, res, next) => {
   console.log(req.body);
@@ -8,19 +9,21 @@ exports.register = async (req, res, next) => {
     return res.status(400).json({ message: "Password less than 6 characters" });
   }
 
-  try {
-    await User.create(username, password).then((user) =>
-      res.status(200).json({
-        message: "User successfully created",
-        user,
-      })
-    );
-  } catch (err) {
-    res.status(401).json({
-      message: "User not created",
-      error: err.message,
-    });
-  }
+  bcrypt.hash(password, 10).then(async (hash) => {
+    await User.create({ username, password: hash })
+      .then((user) =>
+        res.status(200).json({
+          message: "User successfully created",
+          user,
+        })
+      )
+      .catch((err) =>
+        res.status(401).json({
+          message: "User not created",
+          error: err.message,
+        })
+      );
+  });
 };
 
 exports.login = async (req, res, next) => {
@@ -34,24 +37,24 @@ exports.login = async (req, res, next) => {
   }
 
   try {
-    const dataResponse = (await User.find(username, password)).rows[0];
-
-    if (!dataResponse) {
-      res.status(401).json({
+    const user = await User.find(username);
+    console.log(user);
+    if (!user) {
+      res.status(400).json({
         message: "Login not successful",
         error: "User not found",
       });
     } else {
-      const userInfos = dataResponse.row.slice(1, -1).split(",");
-      const user = {
-        id: userInfos[0],
-        username: userInfos[1],
-        password: userInfos[2],
-        role: userInfos[3],
-      };
-      res.status(200).json({
-        message: "Login successful",
-        user,
+      // Comparing given password with hashed password
+      bcrypt.compare(password, user.password).then((result) => {
+        result
+          ? res.status(200).json({
+              message: "Login successful",
+              user,
+            })
+          : res.status(400).json({
+              message: "Bad password",
+            });
       });
     }
   } catch (err) {
@@ -75,15 +78,7 @@ exports.update = async (req, res, next) => {
   // Verifying if the value of role is admin
   if (role === "admin") {
     await User.findById(id)
-      .then((dataResponse) => {
-        const userInfos = dataResponse.rows[0].row.slice(1, -1).split(",");
-        const user = {
-          id: userInfos[0],
-          username: userInfos[1],
-          password: userInfos[2],
-          role: userInfos[3],
-        };
-
+      .then((user) => {
         // Verifies the user is not an admin
         if (user.role === "admin") {
           res.status(400).json({
@@ -109,4 +104,22 @@ exports.update = async (req, res, next) => {
       message: "Role is not admin",
     });
   }
+};
+
+exports.deleteUser = async (req, res, next) => {
+  const { id } = req.body;
+  await User.findById(id)
+    .then((user) => {
+      User.remove(user);
+      res.status(201).json({
+        message: "User successfully deleted",
+        user,
+      });
+    })
+    .catch((err) =>
+      res.status(400).json({
+        message: "An error occurred",
+        error: err.message,
+      })
+    );
 };
