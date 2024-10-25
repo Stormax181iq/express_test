@@ -2,7 +2,7 @@ POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "testhash1",
+  "username": "testjwt",
   "password": "123456"
 }
 
@@ -12,7 +12,7 @@ POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "testhash1",
+  "username": "testjwt",
   "password": "123456"
 }
 
@@ -23,7 +23,7 @@ Content-Type: application/json
 
 {
   "role": "admin",
-  "id": 5
+  "id": 1
 }
 
 ###
@@ -32,5 +32,5 @@ DELETE http://localhost:3000/api/auth/deleteUser
 Content-Type: application/json
 
 {
-  "id": 5
+  "id": 1
 }

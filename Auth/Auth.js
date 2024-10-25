@@ -1,5 +1,7 @@
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 exports.register = async (req, res, next) => {
   console.log(req.body);
@@ -10,13 +12,30 @@ exports.register = async (req, res, next) => {
   }
 
   bcrypt.hash(password, 10).then(async (hash) => {
-    await User.create({ username, password: hash })
-      .then((user) =>
+    await User.create({
+      username,
+      password: hash,
+    })
+      .then((user) => {
+        console.log(user);
+        const maxAge = 3 * 60 * 60;
+        const token = jwt.sign(
+          { id: user.id, username, role: user.role },
+          process.env.JWTSECRET,
+          {
+            expiresIn: maxAge, // 3 hours in seconds
+          }
+        );
+
+        res.cookie("jwt", token, {
+          httpOnly: true,
+          maxAge: maxAge * 1000, // 3 hours in ms
+        });
         res.status(200).json({
           message: "User successfully created",
           user,
-        })
-      )
+        });
+      })
       .catch((err) =>
         res.status(401).json({
           message: "User not created",
@@ -38,7 +57,6 @@ exports.login = async (req, res, next) => {
 
   try {
     const user = await User.find(username);
-    console.log(user);
     if (!user) {
       res.status(400).json({
         message: "Login not successful",
@@ -47,14 +65,29 @@ exports.login = async (req, res, next) => {
     } else {
       // Comparing given password with hashed password
       bcrypt.compare(password, user.password).then((result) => {
-        result
-          ? res.status(200).json({
-              message: "Login successful",
-              user,
-            })
-          : res.status(400).json({
-              message: "Bad password",
-            });
+        if (!result) {
+          res.status(400).json({
+            message: "Bad password",
+          });
+        }
+
+        const maxAge = 3 * 60 * 60;
+        const token = jwt.sign(
+          { id: user.id, username, role: user.role },
+          process.env.JWTSECRET,
+          {
+            expiresIn: maxAge, // 3 hours in s
+          }
+        );
+
+        res.cookie("jwt", token, {
+          httpOnly: true,
+          maxAge: maxAge * 1000, // 3 hours in ms
+        });
+        res.status(200).json({
+          message: "User successfully logged in",
+          user,
+        });
       });
     }
   } catch (err) {
@@ -116,10 +149,10 @@ exports.deleteUser = async (req, res, next) => {
         user,
       });
     })
-    .catch((err) =>
+    .catch((err) => {
       res.status(400).json({
         message: "An error occurred",
         error: err.message,
-      })
-    );
+      });
+    });
 };
