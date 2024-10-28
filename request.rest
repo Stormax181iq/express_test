@@ -2,7 +2,7 @@ POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "testjwt",
+  "username": "testfind2",
   "password": "123456"
 }
 
@@ -12,7 +12,7 @@ POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "testjwt",
+  "username": "teester4345",
   "password": "123456"
 }
 

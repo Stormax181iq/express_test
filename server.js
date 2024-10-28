@@ -8,6 +8,8 @@ app.use(express.json());
 app.use("/api/Auth", require("./Auth/Route"));
 app.use(cookieParser());
 
+app.set("view engine", "ejs");
+
 app.get("/admin", adminAuth, (req, res) => res.send("Admin route"));
 app.get("/basic", userAuth, (req, res) => res.send("User route"));
 
@@ -19,4 +21,4 @@ process.on("unhandledRejection", (err) => {
   console.log(`An error occurred: ${err.message}`);
   server.close(() => process.exit(1));
 });
-// TODO stop at https://www.loginradius.com/blog/engineering/guest-post/nodejs-authentication-guide/#refactor-the-login-function
+// TODO stop at https://www.loginradius.com/blog/engineering/guest-post/nodejs-authentication-guide/#create-the-login-form-using-ejs

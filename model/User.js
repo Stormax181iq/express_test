@@ -7,54 +7,46 @@ async function create({ username, password }) {
     `INSERT INTO users (username, password) VALUES ('${username}', '${password}');`
   );
 
-  return find(username, password);
+  return find(username);
 }
 
-function read() {}
+async function read() {}
 
 async function updateRole(id, newRole) {
   await client.query(
     `UPDATE users
-      SET role = '${newRole}'
-      WHERE id = ${id}`
+    SET role = '${newRole}'
+    WHERE id = ${id}`
   );
 }
 
 async function remove(user) {
   await client.query(
     `DELETE FROM users
-      WHERE username = '${user.username}' AND id = ${user.id};`
+    WHERE username = '${user.username}' AND id = ${user.id};`
   );
 }
 
-async function find(username) {
-  return parseResponseToObject(
-    await client.query(
-      `SELECT (id, username, password, role) FROM users 
-      WHERE username='${username}';`
-    )
+async function find(username = null) {
+  return await client.query(
+    `SELECT row_to_json(
+      (SELECT u FROM (SELECT id, username, password, role) AS u)
+      ) AS user_data
+      FROM users
+      ${username ? `WHERE username = '${username}'` : ""};
+      `
   );
 }
 
 async function findById(id) {
-  return parseResponseToObject(
-    await client.query(
-      `SELECT (id, username, password, role) FROM users
-      WHERE id=${id};`
-    )
+  return await client.query(
+    `SELECT row_to_json(
+      (SELECT u FROM (SELECT id, username, password, role) AS u)
+      ) AS user_data
+      FROM users
+      WHERE id = ${id};
+      `
   );
-}
-
-function parseResponseToObject(response) {
-  console.log(response);
-  const userInfos = response?.rows[0].row.slice(1, -1).split(",");
-  const user = {
-    id: userInfos[0],
-    username: userInfos[1],
-    password: userInfos[2],
-    role: userInfos[3],
-  };
-  return user;
 }
 
 module.exports = { create, read, updateRole, remove, find, findById };
