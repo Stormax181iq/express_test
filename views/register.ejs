@@ -40,6 +40,7 @@
           });
 
           const data = await res.json();
+          console.table(data.user);
 
           if (res.status === 400 || res.status === 401) {
             return (display.textContent = `${data.message}. ${
@@ -47,7 +48,7 @@
             }`);
           }
 
-          data.role === "admin"
+          data.user.role === "admin"
             ? location.assign("/admin")
             : location.assign("/basic");
         } catch (err) {

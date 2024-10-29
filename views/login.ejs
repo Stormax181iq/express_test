@@ -36,13 +36,13 @@
         try {
           const res = await fetch("api/auth/login", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
               username: username.value,
               password: password.value,
             }),
+            headers: {
+              "Content-Type": "application/json",
+            },
           });
 
           const data = await res.json();
@@ -53,7 +53,7 @@
             }`);
           }
 
-          data.role === "admin"
+          data.user.role === "admin"
             ? location.assign("/admin")
             : location.assign("/basic");
         } catch (err) {

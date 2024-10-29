@@ -33,7 +33,8 @@ async function find(username = null) {
       (SELECT u FROM (SELECT id, username, password, role) AS u)
       ) AS user_data
       FROM users
-      ${username ? `WHERE username = '${username}'` : ""};
+      ${username ? `WHERE username = '${username}'` : ""}
+      ORDER BY id;
       `
   );
 }

@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 exports.register = async (req, res, next) => {
-  console.log(req.body);
   const { username, password } = req.body;
 
   if (password.length < 6) {
@@ -16,7 +15,8 @@ exports.register = async (req, res, next) => {
       username,
       password: hash,
     })
-      .then((user) => {
+      .then((result) => {
+        const user = result.rows[0].user_data;
         console.log(user);
         const maxAge = 3 * 60 * 60;
         const token = jwt.sign(
@@ -31,17 +31,17 @@ exports.register = async (req, res, next) => {
           httpOnly: true,
           maxAge: maxAge * 1000, // 3 hours in ms
         });
-        res.status(200).json({
+        return res.status(200).json({
           message: "User successfully created",
           user,
         });
       })
-      .catch((err) =>
-        res.status(401).json({
+      .catch((err) => {
+        return res.status(401).json({
           message: "User not created",
           error: err.message,
-        })
-      );
+        });
+      });
   });
 };
 
@@ -57,52 +57,75 @@ exports.login = async (req, res, next) => {
 
   try {
     const user = await User.find(username).then((result) => {
-      console.log(result);
       return result.rows[0]?.user_data;
     });
 
     if (!user) {
-      res.status(400).json({
+      return res.status(400).json({
         message: "Login not successful",
         error: "User not found",
       });
-    } else {
-      // Comparing given password with hashed password
-      bcrypt.compare(password, user.password).then((result) => {
-        if (!result) {
-          res.status(400).json({
-            message: "Bad password",
-          });
-        }
-
-        const maxAge = 3 * 60 * 60;
-        const token = jwt.sign(
-          { id: user.id, username, role: user.role },
-          process.env.JWTSECRET,
-          {
-            expiresIn: maxAge, // 3 hours in s
-          }
-        );
-
-        res.cookie("jwt", token, {
-          httpOnly: true,
-          maxAge: maxAge * 1000, // 3 hours in ms
-        });
-        res.status(200).json({
-          message: "User successfully logged in",
-          user,
-        });
-      });
     }
+    // Comparing given password with hashed password
+    bcrypt.compare(password, user.password).then((result) => {
+      if (!result) {
+        return res.status(400).json({
+          message: "Bad password",
+        });
+      }
+
+      const maxAge = 3 * 60 * 60;
+      const token = jwt.sign(
+        { id: user.id, username, role: user.role },
+        process.env.JWTSECRET,
+        {
+          expiresIn: maxAge, // 3 hours in s
+        }
+      );
+
+      res.cookie("jwt", token, {
+        httpOnly: true,
+        maxAge: maxAge * 1000, // 3 hours in ms
+      });
+      return res.status(200).json({
+        message: "User successfully logged in",
+        user,
+      });
+    });
   } catch (err) {
-    res.status(400).json({
+    return res.status(400).json({
       message: "An error occurred",
       error: err.message,
     });
   }
 };
 
-exports.update = async (req, res, next) => {
+async function makeUser(id, role, res) {
+  await User.findById(id)
+    .then((user) => {
+      // Verifies the user is not the same role
+      if (user.role === role) {
+        return res.status(400).json({
+          message: `User is already ${role}`,
+        });
+      }
+
+      user.role = role;
+      User.updateRole(id, user.role);
+      return res.status(200).json({
+        message: "Update successful",
+        user,
+      });
+    })
+    .catch((err) => {
+      return res.status(400).json({
+        message: "An error occurred",
+        error: err.message,
+      });
+    });
+}
+
+exports.update = (req, res, next) => {
   const { role, id } = req.body;
 
   // Verifying if role and id is present
@@ -114,40 +137,22 @@ exports.update = async (req, res, next) => {
 
   // Verifying if the value of role is admin
   if (role === "admin") {
-    await User.findById(id)
-      .then((user) => {
-        // Verifies the user is not an admin
-        if (user.role === "admin") {
-          res.status(400).json({
-            message: "User is already an Admin",
-          });
-        }
-
-        user.role = role;
-        User.updateRole(id, user.role);
-        res.status(200).json({
-          message: "Update successful",
-          user,
-        });
-      })
-      .catch((err) => {
-        res.status(400).json({
-          message: "An error occurred",
-          error: err.message,
-        });
-      });
+    makeUser(id, role, res);
+  } else if (role === "Basic") {
+    makeUser(id, role, res);
   } else {
     res.status(400).json({
-      message: "Role is not admin",
+      message: "Role doesn’t exist",
     });
   }
 };
 
 exports.deleteUser = async (req, res, next) => {
   const { id } = req.body;
+  console.log(id);
   await User.findById(id)
     .then((user) => {
-      User.remove(user);
+      User.remove(user.rows[0].user_data);
       res.status(201).json({
         message: "User successfully deleted",
         user,
