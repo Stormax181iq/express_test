@@ -14,7 +14,6 @@
       async function getUsers() {
         const res = await fetch("/api/auth/getUsers");
         const data = await res.json();
-        console.log(data);
         data.user.map((mappedUser) => {
           if (mappedUser.username !== "admin") {
             let li = `<li> <b>Username</b> => ${mappedUser.username} <br> <b>Role</b> => ${mappedUser.role} </li>`;
