@@ -38,7 +38,6 @@
 
             const id = data.user[i + 1].id;
 
-            console.log(data);
             const res = await fetch("/api/auth/update", {
               method: "PUT",
               headers: {

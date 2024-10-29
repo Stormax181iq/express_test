@@ -17,7 +17,6 @@ exports.register = async (req, res, next) => {
     })
       .then((result) => {
         const user = result.rows[0].user_data;
-        console.log(user);
         const maxAge = 3 * 60 * 60;
         const token = jwt.sign(
           { id: user.id, username, role: user.role },
@@ -149,7 +148,6 @@ exports.update = (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
   const { id } = req.body;
-  console.log(id);
   await User.findById(id)
     .then((user) => {
       User.remove(user.rows[0].user_data);

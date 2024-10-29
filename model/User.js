@@ -10,8 +10,6 @@ async function create({ username, password }) {
   return find(username);
 }
 
-async function read() {}
-
 async function updateRole(id, newRole) {
   await client.query(
     `UPDATE users

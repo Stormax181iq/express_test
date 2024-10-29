@@ -40,7 +40,6 @@
           });
 
           const data = await res.json();
-          console.table(data.user);
 
           if (res.status === 400 || res.status === 401) {
             return (display.textContent = `${data.message}. ${
